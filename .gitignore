@@ -34,3 +34,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+## conventional commit related files
+node_modules/ 
+.husky/
+commitlint.config.js
+package-lock.json
+package.json
+

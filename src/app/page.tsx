@@ -1,113 +1,167 @@
+import Head from "next/head";
 import Image from "next/image";
 
 export default function Home() {
+  
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="min-h-screen bg-gray-100">
+      <Head>
+        <title>UsherTally - Real-time People Counter</title>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      {/* Header */}
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className="text-2xl font-bold text-gray-900">UsherTally</div>
+          <nav className="space-x-4">
+            <a href="#" className="text-gray-600 hover:text-gray-900">Home</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">Features</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">Pricing</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">About</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">Contact</a>
+          </nav>
+          <div>
+            <a href="/login" className="text-gray-600 hover:text-gray-900">Login</a>
+            <a href="/signup" className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Sign Up</a>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      {/* Hero Section */}
+      <section className="bg-blue-600 text-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl font-bold">Real-time People Counting Made Easy</h1>
+          <p className="mt-4 text-lg">Monitor and manage your event's attendance effortlessly with UsherTally.</p>
+          <div className="mt-6">
+            <a href="/signup" className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-200">Get Started</a>
+            <a href="#features" className="ml-4 px-8 py-3 bg-transparent border border-white text-white rounded-lg font-semibold hover:bg-blue-700">Learn More</a>
+          </div>
+        </div>
+      </section>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center">Features</h2>
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="flex items-center justify-center h-12 w-12 rounded-full bg-blue-500 text-white mx-auto mb-4">
+                {/* Icon */}
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold">Real-time Updates</h3>
+              <p className="mt-2 text-gray-600">Stay informed with live updates on attendee counts.</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center h-12 w-12 rounded-full bg-blue-500 text-white mx-auto mb-4">
+                {/* Icon */}
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold">Easy Section Management</h3>
+              <p className="mt-2 text-gray-600">Effortlessly manage and organize seating sections.</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center h-12 w-12 rounded-full bg-blue-500 text-white mx-auto mb-4">
+                {/* Icon */}
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold">Secure Authentication</h3>
+              <p className="mt-2 text-gray-600">Ensure data security with robust authentication features.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+      {/* How It Works Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center">How It Works</h2>
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="text-center">
+              <img src="/images/signup.svg" alt="Sign Up" className="mx-auto mb-4 h-24 w-24" />
+              <h3 className="text-lg font-semibold">Sign Up</h3>
+              <p className="mt-2 text-gray-600">Create an account in just a few easy steps.</p>
+            </div>
+            <div className="text-center">
+              <img src="/images/setup.svg" alt="Set Up" className="mx-auto mb-4 h-24 w-24" />
+              <h3 className="text-lg font-semibold">Set Up Sections</h3>
+              <p className="mt-2 text-gray-600">Define and manage seating sections effortlessly.</p>
+            </div>
+            <div className="text-center">
+              <img src="/images/start-counting.svg" alt="Start Counting" className="mx-auto mb-4 h-24 w-24" />
+              <h3 className="text-lg font-semibold">Start Counting</h3>
+              <p className="mt-2 text-gray-600">Begin monitoring attendance in real-time.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+      {/* Testimonials Section */}
+      <section className="py-20 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center">Testimonials</h2>
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="text-center">
+              <p className="text-gray-600">"UsherTally has completely transformed the way we manage our events. The real-time updates are a game-changer!"</p>
+              <div className="mt-4 flex justify-center">
+                <img src="/images/user1.jpg" alt="User 1" className="h-12 w-12 rounded-full" />
+                <div className="ml-4 text-left">
+                  <h4 className="font-semibold">John Doe</h4>
+                  <p className="text-gray-600 text-sm">Event Manager</p>
+                </div>
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-600">"The section management feature is incredibly intuitive and makes our job so much easier."</p>
+              <div className="mt-4 flex justify-center">
+                <img src="/images/user2.jpg" alt="User 2" className="h-12 w-12 rounded-full" />
+                <div className="ml-4 text-left">
+                  <h4 className="font-semibold">Jane Smith</h4>
+                  <p className="text-gray-600 text-sm">Operations Coordinator</p>
+                </div>
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-600">"Secure authentication gives us peace of mind knowing our data is safe."</p>
+              <div className="mt-4 flex justify-center">
+                <img src="/images/user3.jpg" alt="User 3" className="h-12 w-12 rounded-full" />
+                <div className="ml-4 text-left">
+                  <h4 className="font-semibold">Emily Johnson</h4>
+                  <p className="text-gray-600 text-sm">Tech Lead</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      {/* Call to Action Section */}
+      <section className="py-20 bg-blue-600 text-white text-center">
+        <h2 className="text-3xl font-bold">Get Started with UsherTally Today!</h2>
+        <p className="mt-4">Join now and streamline your event management with real-time people counting.</p>
+        <div className="mt-6">
+          <a href="/signup" className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-200">Start Your Free Trial</a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div>&copy; 2024 UsherTally. All rights reserved.</div>
+          <div className="space-x-4">
+            <a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a>
+            <a href="#" className="text-gray-400 hover:text-white">Terms of Service</a>
+            <a href="#" className="text-gray-400 hover:text-white">Contact</a>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
