@@ -3,15 +3,15 @@ npm install -D tailwindcss postcss autoprefixer
 npx tailwindcss init -p
 npm install prettier -D
 npm install husky@latest -D
-npx husky 
+npx husky
 echo “npm run format” > .husky/pre-commit
 npm install @commitlint/{cli,config-conventional} --save-dev
-echo "                  
-module.exports = {                               
-    extends: ['@commitlint/config-conventional'],
-};                       
+echo "  
+module.exports = {  
+ extends: ['@commitlint/config-conventional'],
+};  
 " >> commitlint.config.js
-echo "exec < /dev/tty && git cz --hook || true"  > .husky/pre-commit-msg
+echo "exec < /dev/tty && git cz --hook || true" > .husky/pre-commit-msg
 echo "npx --no-install commitlint --edit" > .husky/commit-msg
 echo "$(cat .husky/commit-msg) \"\$1\"" >> .husky/commit-msg
 npm install commitizen --save-dev
