@@ -2,27 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import Pusher from "pusher";
 
 const pusher = new Pusher({
-    appId: process.env.PUSHER_APP_ID!,
-    key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY!,
-    secret: process.env.PUSHER_SECRET!,
-    cluster: process.env.PUSHER_CLUSTER!,
-    useTLS: true,
+  appId: process.env.PUSHER_APP_ID!,
+  key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY!,
+  secret: process.env.PUSHER_SECRET!,
+  cluster: process.env.PUSHER_CLUSTER!,
+  useTLS: true,
 });
 
 interface AddSectionData {
-    id: number;
+  id: number;
 }
 
 export async function POST(req: NextRequest, res: NextResponse) {
-    const data = await req.json();
-    const { id, name } = data;
-    console.log("hello", data);
+  const data = await req.json();
+  const { id, name } = data;
+  console.log("hello", data);
 
-    // Trigger an event to notify all clients of the new section
-    pusher.trigger("counter-channel", "section-added", { id, name });
+  // Trigger an event to notify all clients of the new section
+  pusher.trigger("counter-channel", "section-added", { id, name });
 
-    return Response.json({ message: "Section added" });
+  return Response.json({ message: "Section added" });
 
-    //   res.setHeader('Allow', ['POST']);
-    //   res.status(405).end(`Method ${req.method} Not Allowed`);
+  //   res.setHeader('Allow', ['POST']);
+  //   res.status(405).end(`Method ${req.method} Not Allowed`);
 }
