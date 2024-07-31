@@ -17,17 +17,20 @@ interface AddSectionData {
 
 export async function POST(req: NextRequest, res: NextResponse) {
   const data = await req.json();
-  const { id, name } = data;
+  const { sectionId, rows, columns, seats } = data;
 
   try {
-    // Add a new section to Firestore
-    const sectionsRef = collection(db, "sections");
-    await addDoc(sectionsRef, { id, name, count: 0 });
-    // Trigger an event to notify all clients of the new section
-    pusher.trigger("counter-channel", "section-added", { id, name });
+    // Trigger a Pusher event
+    await pusher.trigger("seat-map-channel", "seat-map-updated", {
+      sectionId,
+      rows,
+      columns,
+      seats,
+    });
 
     return Response.json({ message: "Section added" }, { status: 200 });
   } catch (error) {
+    console.log(error);
     return Response.json(
       { message: "Failed to add section", error },
       { status: 500 },

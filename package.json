@@ -12,6 +12,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "firebase": "^10.12.4",
     "next": "14.2.4",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0-rc2",

@@ -1,5 +1,21 @@
+import { db } from "@/utils/firebase";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import Pusher from "pusher";
+
+// Interface for a counter section
+interface Section {
+  id: number;
+  count: number;
+  name: string;
+}
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID!,
@@ -16,15 +32,28 @@ interface PusherData {
 export async function POST(req: NextRequest, res: NextResponse) {
   const data = await req.json();
   const { id, count } = data;
-  console.log("hello", data);
 
-  pusher.trigger("counter-channel", "count-updated", {
-    id,
-    count,
-  });
+  try {
+    // Update Firestore document
+    const sectionsRef = collection(db, "sections");
+    const snapshot = await getDocs(sectionsRef);
+    const docId = snapshot.docs.find((d) => d.data().id === id)?.id;
+    if (!docId) throw "No doc Id";
+    const docRef = doc(db, "sections", docId);
+    await updateDoc(docRef, { count });
 
-  return Response.json({ message: "Count updated" });
+    // Trigger a Pusher event
+    await pusher.trigger("counter-channel", "count-updated", {
+      id,
+      count,
+    });
 
-  //   res.setHeader('Allow', ['POST']);
-  //   res.status(405).end(`Method ${req.method} Not Allowed`);
+    return Response.json({ message: "Count updated" }, { status: 200 });
+  } catch (error) {
+    console.log(error);
+    return Response.json(
+      { message: "Failed to update count", error },
+      { status: 500 },
+    );
+  }
 }

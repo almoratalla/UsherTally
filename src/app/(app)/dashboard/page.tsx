@@ -1,5 +1,8 @@
 "use client";
 
+import { db } from "@/utils/firebase";
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
+import { Metadata } from "next";
 /* eslint-disable react/no-unescaped-entities */
 import Head from "next/head";
 import Image from "next/image";
@@ -18,12 +21,46 @@ interface Section {
   name: string;
 }
 
+// export const metadata: Metadata = {
+//     title: "UsherTally - Real-time People Counter",
+//     icons: "/favicon.ico",
+// };
+
 export default function Dashboard() {
   // State to keep track of the count
   const [count, setCount] = useState<number>(0);
   // State to keep track of multiple sections
   const [sections, setSections] = useState<Section[]>([]);
   const [isEditing, setIsEditing] = useState<{ [key: number]: boolean }>({});
+
+  useEffect(() => {
+    const fetchSections = async () => {
+      const sectionsRef = collection(db, "sections");
+      console.log(sectionsRef);
+      const snapshot = await getDocs(sectionsRef);
+      const sectionsData: Section[] = snapshot.docs.map((doc) => ({
+        id: doc.data().id,
+        count: doc.data().count,
+        name: doc.data().name,
+      }));
+
+      setSections(sectionsData);
+    };
+
+    fetchSections();
+
+    // Listen for real-time updates
+    const unsubscribe = onSnapshot(collection(db, "sections"), (snapshot) => {
+      const updatedSections: Section[] = snapshot.docs.map((doc) => ({
+        id: doc.data().id,
+        count: doc.data().count,
+        name: doc.data().name,
+      }));
+      setSections(updatedSections);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     // Initialize Pusher
@@ -45,12 +82,6 @@ export default function Dashboard() {
     channel.bind("count-updated", (data: { id: number; count: number }) => {
       setSections((prevSections) =>
         prevSections.map((section) => {
-          console.log(
-            section.id === data.id,
-            { ...section, count: data.count },
-            section,
-          );
-
           return section.id === data.id
             ? { ...section, count: data.count }
             : section;
@@ -65,7 +96,6 @@ export default function Dashboard() {
       //     { id: data.id, count: 0 },
       // ]);
       setSections((prevSections) => {
-        console.log("Section Added");
         const sectionMap = new Map(prevSections.map((s) => [s.id, s]));
 
         // Add or update the section
@@ -252,15 +282,9 @@ export default function Dashboard() {
       updateCount(id, section.count - 1);
     }
   };
-  console.log(isEditing);
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Head>
-        <title>UsherTally - Real-time People Counter</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -310,11 +334,10 @@ export default function Dashboard() {
           </button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sections.map((section) => {
-              console.log(section);
+            {sections.map((section, sectionIndex) => {
               return (
                 <div
-                  key={section.id}
+                  key={section.id + sectionIndex + Math.random()}
                   className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center"
                 >
                   {isEditing[section.id] ? (
