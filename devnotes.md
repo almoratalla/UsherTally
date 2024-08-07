@@ -16,3 +16,8 @@ echo "npx --no-install commitlint --edit" > .husky/commit-msg
 echo "$(cat .husky/commit-msg) \"\$1\"" >> .husky/commit-msg
 npm install commitizen --save-dev
 commitizen init cz-conventional-changelog --save-dev --save-exact
+
+https://cloud.google.com/firestore/docs/security/rules-query
+https://www.jamesshopland.com/blog/nextjs-firebase-admin-sdk
+https://firebase.google.com/docs/admin/setup#linux-or-macos
+https://youtube.com/watch?v=30ydBNgDsow
