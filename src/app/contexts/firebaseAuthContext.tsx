@@ -9,19 +9,19 @@ export const FirebaseAuthContext = createContext<{ user: any } | null>(null);
 
 // Provide authentication context to components
 export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
-        });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
 
-        return () => unsubscribe();
-    }, []);
+    return () => unsubscribe();
+  }, []);
 
-    return (
-        <FirebaseAuthContext.Provider value={{ user: "" }}>
-            {children}
-        </FirebaseAuthContext.Provider>
-    );
+  return (
+    <FirebaseAuthContext.Provider value={{ user: "" }}>
+      {children}
+    </FirebaseAuthContext.Provider>
+  );
 }

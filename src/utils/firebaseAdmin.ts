@@ -3,44 +3,43 @@ import "server-only";
 import admin from "firebase-admin";
 
 interface FirebaseAdminAppParams {
-    projectId: string;
-    clientEmail: string;
-    storageBucket: string;
-    privateKey: string;
+  projectId: string;
+  clientEmail: string;
+  storageBucket: string;
+  privateKey: string;
 }
 
 function formatPrivateKey(key: string) {
-    return key.replace(/\\n/g, "\n");
+  return key.replace(/\\n/g, "\n");
 }
 
 export function createFirebaseAdminApp(params: FirebaseAdminAppParams) {
-    const privateKey = formatPrivateKey(params.privateKey);
+  const privateKey = formatPrivateKey(params.privateKey);
 
-    if (admin.apps.length > 0) {
-        return admin.app();
-    }
+  if (admin.apps.length > 0) {
+    return admin.app();
+  }
 
-    const cert = admin.credential.cert({
-        projectId: params.projectId,
-        clientEmail: params.clientEmail,
-        privateKey,
-    });
+  const cert = admin.credential.cert({
+    projectId: params.projectId,
+    clientEmail: params.clientEmail,
+    privateKey,
+  });
 
-    return admin.initializeApp({
-        credential: cert,
-        projectId: params.projectId,
-        storageBucket: params.storageBucket,
-    });
+  return admin.initializeApp({
+    credential: cert,
+    projectId: params.projectId,
+    storageBucket: params.storageBucket,
+  });
 }
 
 export async function initAdmin() {
-    const params = {
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
-        clientEmail: process.env.NEXT_FIREBASE_CLIENT_EMAIL as string,
-        storageBucket: process.env
-            .NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
-        privateKey: process.env.NEXT_FIREBASE_PRIVATE_KEY as string,
-    };
+  const params = {
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
+    clientEmail: process.env.NEXT_FIREBASE_CLIENT_EMAIL as string,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
+    privateKey: process.env.NEXT_FIREBASE_PRIVATE_KEY as string,
+  };
 
-    return createFirebaseAdminApp(params);
+  return createFirebaseAdminApp(params);
 }

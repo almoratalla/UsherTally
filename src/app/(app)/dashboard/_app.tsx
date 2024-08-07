@@ -9,14 +9,14 @@ import { FirebaseAuthProvider } from "@/app/contexts/firebaseAuthContext";
 const queryClient = new QueryClient();
 
 function MyApp({ Component, pageProps }: AppProps) {
-    return (
-        <QueryClientProvider client={queryClient}>
-            <FirebaseAuthProvider>
-                <Component {...pageProps} />
-            </FirebaseAuthProvider>
-            <ReactQueryDevtools initialIsOpen={true} />
-        </QueryClientProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <FirebaseAuthProvider>
+        <Component {...pageProps} />
+      </FirebaseAuthProvider>
+      <ReactQueryDevtools initialIsOpen={true} />
+    </QueryClientProvider>
+  );
 }
 
 export default MyApp;
