@@ -15,7 +15,6 @@ const Counters = () => {
     const increment = (id: number) => {
         const section = sections.find((section) => section.id === id);
         if (section) {
-            console.log(section);
             updateSection({ ...section, count: section.count + 1 });
         }
     };
