@@ -45,16 +45,20 @@ export const useCounters = () => {
 
   // Debounce references for section count
   const sectionCountTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const latestSectionCountUpdateRef = useRef<Section | null>(null);
+  const latestSectionCountUpdateRef = useRef<Section[] | null>(null);
 
   // Debounce references for section add
   const sectionAddTimerRef = useRef<NodeJS.Timeout | null>(null);
   const sectionsToAddRef = useRef<Section[]>([]);
 
+  // Debounce references for section delete
+  const sectionDeleteTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const sectionsToDeleteRef = useRef<number[]>([]);
+
   /**
    * Server Side Sections State
    */
-  const { data: sectionsData } = useQuery({
+  const { data: sectionsData, isLoading: isSectionsLoading } = useQuery({
     queryKey: ["sectionsCount"],
     queryFn: async () => {
       const sectionsRef = collection(db, "sections");
@@ -73,27 +77,35 @@ export const useCounters = () => {
   });
 
   /**
-   * Mutate section count
+   * Mutate sections counts
    */
   const { mutate: mutateSectionCount } = useMutation({
-    mutationKey: ["sectionCount"],
-    mutationFn: async (data: Section) => {
-      const section = sections.find((s) => s.id === data.id);
+    mutationKey: ["sectionsCounts"],
+    mutationFn: async (data: Section[]) => {
+      // const section = sections.find((s) => s.id === data.id);
+      const updatedSections = data
+        .map((update) => {
+          const section = sections.find((s) => s.id === update.id);
+          return section ? { ...section, count: update.count } : section;
+        })
+        .filter(Boolean) as Section[];
+
       setSections((prevSections) => {
-        if (section) {
-          return [
-            ...updateArray(
-              prevSections,
-              { ...section, count: data.count },
-              "id",
-            ),
-          ];
-        }
-        return [...prevSections];
+        // Batch update the sections by mapping over prevSections
+        return prevSections.map(
+          (section) =>
+            updatedSections.find((updated) => updated.id === section.id) ||
+            section,
+        );
       });
 
-      // Debouncing
-      latestSectionCountUpdateRef.current = data;
+      // Debouncing for batch updates
+      const addLatestSection = updateArray(
+        [...(latestSectionCountUpdateRef.current ?? [])],
+        updatedSections[0],
+        "id",
+      );
+      latestSectionCountUpdateRef.current = addLatestSection;
 
       if (sectionCountTimerRef.current) {
         clearTimeout(sectionCountTimerRef.current);
@@ -101,15 +113,17 @@ export const useCounters = () => {
 
       sectionCountTimerRef.current = setTimeout(async () => {
         if (latestSectionCountUpdateRef.current) {
-          await fetch("/api/pusher", {
+          await fetch("/api/update-sections-counts", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              id: latestSectionCountUpdateRef.current.id,
-              count: latestSectionCountUpdateRef.current.count,
-            }),
+            body: JSON.stringify(
+              latestSectionCountUpdateRef.current.map((section) => ({
+                id: section.id,
+                count: section.count,
+              })),
+            ),
           });
           latestSectionCountUpdateRef.current = null;
           sectionCountTimerRef.current = null;
@@ -152,15 +166,15 @@ export const useCounters = () => {
   /**
    * Mutate section add
    */
-  const { mutate: mutateSectionAdd } = useMutation({
-    mutationKey: ["sectionAdd"],
-    mutationFn: async () => {
+  const { mutate: mutateSectionsAdd } = useMutation({
+    mutationKey: ["sectionsAdd"],
+    mutationFn: async (newSectionName?: string) => {
       // Create a new section with an incremental ID
       const newId =
         sections.length > 0 ? sections[sections.length - 1].id + 1 : 1;
       const newSection = {
         id: newId,
-        name: `Section ${newId}`,
+        name: `Section ${!!newSectionName ? newSectionName : newId}`,
         count: 0,
       };
 
@@ -205,6 +219,40 @@ export const useCounters = () => {
         }
 
         // Reset the timer ref
+        sectionAddTimerRef.current = null;
+      }, 3000); // Debounce for 3 seconds before making the API call
+    },
+  });
+
+  /**
+   * Mutate section delete
+   */
+  const { mutate: mutateSectionsDelete } = useMutation({
+    mutationKey: ["sectionsDelete"],
+    mutationFn: async (idToDelete: number) => {
+      sectionsToDeleteRef.current.push(idToDelete);
+      setSections((prevSections) =>
+        prevSections.filter(
+          (section) => !sectionsToDeleteRef.current.includes(section.id),
+        ),
+      );
+      // Clear previous timer if it exists
+      if (sectionDeleteTimerRef.current) {
+        clearTimeout(sectionDeleteTimerRef.current);
+      }
+
+      // Set a new debounce timer
+      sectionDeleteTimerRef.current = setTimeout(async () => {
+        if (sectionsToDeleteRef.current.length > 0) {
+          const toDeleteSections = [...sectionsToDeleteRef.current];
+          await fetch("/api/delete-sections", {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(toDeleteSections),
+          });
+        }
         sectionAddTimerRef.current = null;
       }, 3000); // Debounce for 3 seconds before making the API call
     },
@@ -258,6 +306,13 @@ export const useCounters = () => {
       });
     });
 
+    // Listen for the section-deleted event
+    channel.bind("section-deleted", (data: { id: number }) => {
+      setSections((prevSections) =>
+        prevSections.filter((section) => section.id !== data.id),
+      );
+    });
+
     // Bind the event for renaming a section
     channel.bind("section-renamed", (data: { id: number; name: string }) => {
       setSections((prevSections) =>
@@ -278,9 +333,11 @@ export const useCounters = () => {
     fetchedSections: sectionsData,
     sections,
     setSections,
+    isSectionsLoading,
     updateSection: mutateSectionCount,
     renameSection: mutateSectionName,
-    addSection: mutateSectionAdd,
+    addSections: mutateSectionsAdd,
+    deleteSections: mutateSectionsDelete,
   };
 };
 

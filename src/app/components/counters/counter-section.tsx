@@ -1,4 +1,14 @@
 import useCounters from "@/app/hooks/useCounters";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Check, Edit2, Minus, Plus, Trash2 } from "lucide-react";
 import React, { FC, PropsWithChildren, useMemo, useState } from "react";
 
 interface Section {
@@ -12,71 +22,88 @@ const CounterSection: FC<
     Section & {
       increment: (id: number) => void;
       decrement: (id: number) => void;
+      deleteSection: () => void;
     }
-> = ({ id, count, name, increment, decrement }) => {
+> = ({ id, count, name, increment, decrement, deleteSection }) => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
-
+  const [editingTitle, setEditingTitle] = useState(name);
   const { sections, renameSection } = useCounters();
 
   const toggleEditing = () => {
-    setIsEditing((prevEditing) => !prevEditing);
+    if (isEditing) {
+      handleNameChange();
+    } else {
+      setIsEditing(true);
+    }
   };
 
-  const handleNameChange = (id: number, newName: string) => {
-    const section = sections.find((section) => section.id === id);
-    if (section) {
-      renameSection({ ...section, id, name: newName });
+  const handleNameChange = () => {
+    if (editingTitle !== name) {
+      const section = sections.find((section) => section.id === id);
+      if (section) {
+        renameSection({ ...section, id, name: editingTitle });
+      }
     }
-
-    toggleEditing(); // Stop editing after renaming
+    setIsEditing(false);
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
-      {isEditing ? (
-        <input
-          type="text"
-          defaultValue={name}
-          onBlur={(e) => handleNameChange(id, e.target.value)}
-          // onKeyPress={(e) => {
-          //     if (e.key === "Enter") {
-          //         handleNameChange(
-          //             id,
-          //             e.currentTarget.value
-          //         );
-          //     }
-          // }}
-          autoFocus
-          className="text-2xl font-semibold mb-4 text-center border-b-2 border-gray-300 focus:outline-none"
-        />
-      ) : (
-        <h2 className="text-2xl font-semibold mb-4">
-          {name}: {count}
-        </h2>
-      )}
-      <div className="flex space-x-4">
-        <button
-          onClick={() => {
-            increment(id);
-          }}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-        >
-          Add
-        </button>
-        <button
-          onClick={() => decrement(id)}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-        >
-          Subtract
-        </button>
-        <button
-          onClick={() => toggleEditing()}
-          className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
-        >
-          {isEditing ? "Save" : "Edit"}
-        </button>
-      </div>
-    </div>
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-4">
+        {isEditing ? (
+          <Input
+            type="text"
+            value={editingTitle}
+            onChange={(e) => setEditingTitle(e.target.value)}
+            // onBlur={handleNameChange}
+            className="w-[calc(100%-2.5rem)]"
+            autoFocus
+          />
+        ) : (
+          <CardTitle className="text-2xl font-bold">{editingTitle}</CardTitle>
+        )}
+        <div className="flex flex-row justify-end">
+          <Button variant="ghost" size="icon" onClick={toggleEditing}>
+            {isEditing ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Edit2 className="h-4 w-4" />
+            )}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={deleteSection}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardDescription className="px-6 pb-2">
+        Last modified: {new Date().toLocaleString()}
+      </CardDescription>
+      <CardContent className="py-8">
+        <div className="flex items-center justify-center space-x-4">
+          <span className="text-5xl font-bold">{count}</span>
+        </div>
+        <div className="flex items-center justify-center space-x-4 mt-4 font-medium">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => increment(id)}
+            className="bg-green-500 hover:bg-green-600 w-full"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => decrement(id)}
+            className="bg-red-500 hover:bg-red-600 w-full"
+          >
+            <Minus className="h-4 w-4 fill-white stroke-white" />
+            <span className="text-white">Subtract</span>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
