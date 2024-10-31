@@ -12,15 +12,23 @@
         "prepare": "husky"
     },
     "dependencies": {
+        "@radix-ui/react-aspect-ratio": "^1.1.0",
+        "@radix-ui/react-dialog": "^1.1.2",
+        "@radix-ui/react-slot": "^1.1.0",
         "@tanstack/react-query": "^5.51.21",
         "@tanstack/react-query-devtools": "^5.51.21",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.1",
         "firebase": "^10.12.4",
         "firebase-admin": "^12.3.0",
+        "lucide-react": "^0.454.0",
         "next": "^14.2.16",
         "pusher": "^5.2.0",
         "pusher-js": "^8.4.0-rc2",
         "react": "^18",
-        "react-dom": "^18"
+        "react-dom": "^18",
+        "tailwind-merge": "^2.5.4",
+        "tailwindcss-animate": "^1.0.7"
     },
     "devDependencies": {
         "@commitlint/cli": "^19.3.0",
