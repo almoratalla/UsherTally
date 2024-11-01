@@ -1,9 +1,12 @@
 "use client";
+// src/pages/signin.tsx
 
+import React from "react";
 import Header from "@/app/components/Header";
-import { UserAuthForm } from "@/app/components/UserAuthForm";
 import Link from "next/link";
-const SignUpPage: React.FC = () => {
+import { UserAuthForm } from "@/app/components/UserAuthForm";
+
+const LoginInPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-white h-screen">
             <Header />
@@ -11,13 +14,13 @@ const SignUpPage: React.FC = () => {
                 <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px] my-auto">
                     <div className="flex flex-col space-y-2 text-center">
                         <h1 className="text-2xl font-semibold tracking-tight">
-                            Create an account
+                            Login
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Enter your email below to create your account
+                            Enter your email below to login to your account
                         </p>
                     </div>
-                    <UserAuthForm form="signup" />
+                    <UserAuthForm form="login" />
                     <p className="px-8 text-center text-sm text-muted-foreground">
                         By clicking continue, you agree to our{" "}
                         <Link
@@ -41,4 +44,4 @@ const SignUpPage: React.FC = () => {
     );
 };
 
-export default SignUpPage;
+export default LoginInPage;
