@@ -13,14 +13,14 @@ import { ProjectsProvider } from "./hooks/useProjects";
 const queryClient = new QueryClient();
 
 function Providers({ children }: PropsWithChildren) {
-    return (
-        <QueryClientProvider client={queryClient}>
-            <FirebaseAuthProvider>
-                <ProjectsProvider>{children}</ProjectsProvider>
-            </FirebaseAuthProvider>
-            <ReactQueryDevtools initialIsOpen={true} />
-        </QueryClientProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <FirebaseAuthProvider>
+        <ProjectsProvider>{children}</ProjectsProvider>
+      </FirebaseAuthProvider>
+      <ReactQueryDevtools initialIsOpen={true} />
+    </QueryClientProvider>
+  );
 }
 
 export default Providers;
