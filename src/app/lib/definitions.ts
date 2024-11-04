@@ -1,18 +1,18 @@
 import { DocumentData } from "firebase/firestore";
 
 export interface Section {
-    id: number;
-    count: number;
-    name: string;
-    projectName: string;
-    lastModified: Date;
-    capacity?: number;
+  id: number;
+  count: number;
+  name: string;
+  projectName: string;
+  lastModified: Date;
+  capacity?: number;
 }
 
 type SectionCountRecord = Record<string, number>;
 export type ProjectSectionCountsRecord = Record<string, SectionCountRecord>;
 
 export interface iTrackUpdates extends DocumentData {
-    day: number;
-    counts: ProjectSectionCountsRecord;
+  day: number;
+  counts: ProjectSectionCountsRecord;
 }
