@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Grid, Minus, Plus, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Grid, Minus, Plus, Save, Trash2 } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 
 type Seat = {
@@ -26,24 +27,46 @@ type Row = {
   seats: Seat[];
 };
 
-type Section = {
+type StagedSection = {
   id: string;
   name: string;
   rows: Row[];
 };
 
+const ModeDropdown = ({
+  currentMode,
+  onChange,
+}: {
+  currentMode: "viewing" | "selection" | "removal";
+  onChange: (mode: "viewing" | "selection" | "removal") => void;
+}) => (
+  <select
+    value={currentMode}
+    onChange={(e) =>
+      onChange(e.target.value as "viewing" | "selection" | "removal")
+    }
+    className="border rounded px-2 py-1 text-sm"
+  >
+    <option value="viewing">Viewing Mode</option>
+    <option value="selection">Selection Mode</option>
+    <option value="removal">Removal Mode</option>
+  </select>
+);
+
 const SeatPlanCreator = () => {
-  const [sections, setSections] = useState<Section[]>([]);
+  const [sections, setSections] = useState<StagedSection[]>([]);
   const [newSectionName, setNewSectionName] = useState("");
   const [bulkRowCount, setBulkRowCount] = useState("");
   const [bulkColumnCount, setBulkColumnCount] = useState("");
-  const [editMode, setEditMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const lastHighlightedSeat = useRef<{
     sectionId: string;
     rowId: string;
     seatId: string;
   } | null>(null);
+  const [mode, setMode] = useState<"viewing" | "selection" | "removal">(
+    "viewing",
+  );
 
   const addSection = () => {
     if (newSectionName.trim()) {
@@ -117,6 +140,7 @@ const SeatPlanCreator = () => {
 
   const toggleSeatHighlight = useCallback(
     (sectionId: string, rowId: string, seatId: string) => {
+      if (mode === "viewing") return;
       setSections((prevSections) =>
         prevSections.map((section) => {
           if (section.id === sectionId) {
@@ -144,7 +168,7 @@ const SeatPlanCreator = () => {
         }),
       );
     },
-    [],
+    [mode],
   );
 
   const deleteSeat = useCallback(
@@ -216,7 +240,7 @@ const SeatPlanCreator = () => {
     seatId: string,
   ) => {
     setIsDragging(true);
-    if (editMode) {
+    if (mode === "removal") {
       deleteSeat(sectionId, rowId, seatId);
     } else {
       toggleSeatHighlight(sectionId, rowId, seatId);
@@ -240,7 +264,7 @@ const SeatPlanCreator = () => {
         lastRowId !== rowId ||
         lastSeatId !== seatId
       ) {
-        if (editMode) {
+        if (mode === "removal") {
           deleteSeat(sectionId, rowId, seatId);
         } else {
           toggleSeatHighlight(sectionId, rowId, seatId);
@@ -254,6 +278,7 @@ const SeatPlanCreator = () => {
     setIsDragging(false);
     lastHighlightedSeat.current = null;
   };
+  console.log(sections);
 
   return (
     <main className="flex flex-col gap-4 justify-between">
@@ -281,123 +306,152 @@ const SeatPlanCreator = () => {
         <div className="w-full">
           <Tabs defaultValue={sections[0]?.id} className="mt-6 w-full">
             <ScrollArea className="w-full whitespace-nowrap rounded-md border bg-white">
-              <TabsList className="inline-flex h-auto w-full gap-2  flex-wrap items-center justify-center rounded-none bg-transparent p-0 py-4">
-                {/* className="w-full overflow-x-auto justify-start" */}
-                {sections.map((section) => (
-                  <TabsTrigger
-                    key={section.id}
-                    value={section.id}
-                    className="inline-flex items-center justify-center rounded-none  whitespace-nowrap border-b-2 border-transparent bg-gray-100 px-3 py-1.5 text-sm font-medium text-muted-foreground ring-offset-background transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none"
-                  >
-                    {section.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <div className="flex flex-col p-3">
+                <span className="text-sm mb-4 border-2 border-gray-200 rounded-md p-2">
+                  Pending section edits:
+                </span>
+                <TabsList className="inline-flex h-auto w-full gap-2  flex-wrap items-center justify-start rounded-none bg-transparent ">
+                  {/* className="w-full overflow-x-auto justify-start" */}
+                  {sections.map((section) => (
+                    <TabsTrigger
+                      key={section.id}
+                      value={section.id}
+                      className="inline-flex items-center justify-center rounded-none  whitespace-nowrap border-b-2 border-transparent bg-gray-100 px-3 py-1.5 text-sm font-medium text-muted-foreground ring-offset-background transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none"
+                    >
+                      {section.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
 
-              <ScrollBar orientation="horizontal" className="invisible" />
+                <ScrollBar orientation="horizontal" className="invisible" />
+              </div>
             </ScrollArea>
             {sections.map((section) => (
               <TabsContent key={section.id} value={section.id}>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
+                    <CardTitle className="flex justify-between items-start">
                       {section.name}
+
                       <div className="flex items-center space-x-2">
-                        <Switch
-                          id={`edit-mode-${section.id}`}
-                          checked={editMode}
-                          onCheckedChange={setEditMode}
-                        />
-                        <Label htmlFor={`edit-mode-${section.id}`}>
-                          Edit Mode
-                        </Label>
+                        {/* <Switch
+                                                    id={`edit-mode-${section.id}`}
+                                                    checked={editMode}
+                                                    onCheckedChange={
+                                                        setEditMode
+                                                    }
+                                                /> */}
+
+                        <Button
+                          size="sm"
+                          onClick={() => console.log("save changes")}
+                          className=""
+                        >
+                          <Save className="w-4 h-4 " /> Save Changes
+                        </Button>
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() => deleteSection(section.id)}
                         >
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Section
+                          <Trash2 className=" h-4 w-4" /> Delete Section
                         </Button>
                       </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex space-x-2 mb-4">
-                      <Button onClick={() => addRow(section.id)}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Row
-                      </Button>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline">
-                            <Grid className="mr-2 h-4 w-4" /> Add Multiple Rows
-                            & Columns
+                      <div className="flex flex-col sm:flex-row justify-between items-between w-full">
+                        <div className="flex flex-col sm:flex-row">
+                          <Button onClick={() => addRow(section.id)}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Row
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>
-                              Add Multiple Rows & Columns
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="bulk-rows" className="text-right">
-                                Rows
-                              </Label>
-                              <Input
-                                id="bulk-rows"
-                                value={bulkRowCount}
-                                onChange={(e) =>
-                                  setBulkRowCount(e.target.value)
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline">
+                                <Grid className="mr-2 h-4 w-4" /> Add Multiple
+                                Rows & Columns
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>
+                                  Add Multiple Rows & Columns
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label
+                                    htmlFor="bulk-rows"
+                                    className="text-right"
+                                  >
+                                    Rows
+                                  </Label>
+                                  <Input
+                                    id="bulk-rows"
+                                    value={bulkRowCount}
+                                    onChange={(e) =>
+                                      setBulkRowCount(e.target.value)
+                                    }
+                                    className="col-span-3"
+                                    type="number"
+                                    min="1"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label
+                                    htmlFor="bulk-columns"
+                                    className="text-right"
+                                  >
+                                    Columns
+                                  </Label>
+                                  <Input
+                                    id="bulk-columns"
+                                    value={bulkColumnCount}
+                                    onChange={(e) =>
+                                      setBulkColumnCount(e.target.value)
+                                    }
+                                    className="col-span-3"
+                                    type="number"
+                                    min="1"
+                                  />
+                                </div>
+                              </div>
+                              <Button
+                                onClick={() =>
+                                  addBulkRowsAndColumns(section.id)
                                 }
-                                className="col-span-3"
-                                type="number"
-                                min="1"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label
-                                htmlFor="bulk-columns"
-                                className="text-right"
                               >
-                                Columns
-                              </Label>
-                              <Input
-                                id="bulk-columns"
-                                value={bulkColumnCount}
-                                onChange={(e) =>
-                                  setBulkColumnCount(e.target.value)
-                                }
-                                className="col-span-3"
-                                type="number"
-                                min="1"
-                              />
-                            </div>
-                          </div>
-                          <Button
-                            onClick={() => addBulkRowsAndColumns(section.id)}
+                                Add
+                              </Button>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                        <div className="flex justify-end items-center">
+                          <Label
+                            htmlFor="mode-dropdown"
+                            className="mr-2 text-sm font-semibold"
                           >
-                            Add
-                          </Button>
-                        </DialogContent>
-                      </Dialog>
+                            Mode:
+                          </Label>
+                          <ModeDropdown
+                            currentMode={mode}
+                            onChange={setMode} // Update state when mode changes
+                          />
+                        </div>
+                      </div>
                     </div>
                     {section.rows.map((row, rowIndex) => (
                       <div key={row.id} className="flex items-center mb-2">
-                        <span className="mr-2 font-bold">{rowIndex + 1}</span>
+                        <span className="mr-8 font-bold">
+                          Row {rowIndex + 1}:
+                        </span>
                         <div className="flex-1 flex flex-wrap gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => addSeat(section.id, row.id)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
                           {row.seats.map((seat) => (
                             <Button
                               key={seat.id}
                               variant={
-                                seat.isHighlighted ? "default" : "outline"
+                                seat.isHighlighted ? "outline" : "outline"
                               }
                               size="sm"
                               onMouseDown={() =>
@@ -406,19 +460,55 @@ const SeatPlanCreator = () => {
                               onMouseEnter={() =>
                                 handleMouseEnter(section.id, row.id, seat.id)
                               }
-                              className="select-none"
+                              className={cn(
+                                "select-none",
+                                seat.isHighlighted &&
+                                  "bg-brand-primary text-white",
+                              )}
                             >
                               {seat.label}
                             </Button>
                           ))}
                         </div>
                         <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addSeat(section.id, row.id)}
+                          className="bg-green-500 hover:bg-green-600"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => deleteRow(section.id, row.id)}
+                          disabled={row.seats.length <= 1}
+                          onClick={() => {
+                            if (row.seats.length <= 1) return;
+                            deleteSeat(
+                              section.id,
+                              row.id,
+                              `${
+                                row.seats
+                                  .sort((ar, br) => {
+                                    return (
+                                      parseInt(ar.label) - parseInt(br.label)
+                                    );
+                                  })
+                                  .pop()?.id
+                              }`,
+                            );
+                          }}
                           className="ml-2"
                         >
                           <Minus className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteRow(section.id, row.id)}
+                          className="ml-2 bg-black hover:bg-black"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     ))}
