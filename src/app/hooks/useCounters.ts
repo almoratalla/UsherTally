@@ -276,7 +276,7 @@ export const useCounters = () => {
       newSectionName,
       capacity,
       layout,
-      count
+      count,
     }: {
       newSectionName?: string;
       capacity?: number;
@@ -506,7 +506,7 @@ export const useCounters = () => {
   );
 
   const activeProjectSections = useMemo(
-    () => 
+    () =>
       sections.filter(
         (section) => section.projectName === activeProject?.projectName,
       ),
