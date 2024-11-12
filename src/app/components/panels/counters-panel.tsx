@@ -17,142 +17,172 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { CounterHeader } from "../counters/counter-header";
+import { adjustLayoutToSeatCount, updateLayout } from "@/utils/functions";
 interface FormValues {
-  newSectionTitle: string;
-  newSectionCapacity: number | undefined;
+    newSectionTitle: string;
+    newSectionCapacity: number | undefined;
 }
 
 const formSchema = z.object({
-  newSectionTitle: z.string().optional(),
-  newSectionCapacity: z
-    .number()
-    .max(1000, "Capacity cannot exceed 1000")
-    .optional(),
+    newSectionTitle: z.string().optional(),
+    newSectionCapacity: z
+        .number()
+        .max(1000, "Capacity cannot exceed 1000")
+        .optional(),
 });
 const CountersPanel = () => {
-  const {
-    activeProjectSections: sections,
-    addSections,
-    isSectionsLoading,
-    updateSection,
-    renameSection,
-    deleteSections,
-    resetCounts,
-  } = useCounters();
+    const {
+        activeProjectSections: sections,
+        addSections,
+        isSectionsLoading,
+        updateSection,
+        renameSection,
+        deleteSections,
+        resetCounts,
+    } = useCounters();
 
-  const increment = useCallback(
-    (id: number) => {
-      const section = sections.find((section) => section.id === id);
-      if (section) {
-        const updatedSection = { ...section, count: section.count + 1 };
-        updateSection([updatedSection]);
-      }
-    },
-    [sections, updateSection],
-  );
+    const increment = useCallback(
+        (id: number) => {
+            const section = sections.find((section) => section.id === id);
+            if (section) {
+                const updatedSection = {
+                    ...section,
+                    count: section.count + 1,
+                    layout: section.layout
+                        ? adjustLayoutToSeatCount(
+                              section.layout,
+                              section.count + 1
+                          )
+                        : section.layout,
+                };
+                updateSection([updatedSection]);
+            }
+        },
+        [sections, updateSection]
+    );
 
-  const decrement = useCallback(
-    (id: number) => {
-      const section = sections.find((section) => section.id === id);
-      if (section) {
-        const updatedSection = { ...section, count: section.count - 1 };
-        updateSection([updatedSection]);
-      }
-    },
-    [sections, updateSection],
-  );
+    const decrement = useCallback(
+        (id: number) => {
+            const section = sections.find((section) => section.id === id);
+            if (section) {
+                const updatedSection = {
+                    ...section,
+                    count: section.count - 1,
+                    layout: section.layout
+                        ? adjustLayoutToSeatCount(
+                              section.layout,
+                              section.count - 1
+                          )
+                        : section.layout,
+                };
+                updateSection([updatedSection]);
+            }
+        },
+        [sections, updateSection]
+    );
 
-  const [newSectionTitle, setNewSectionTitle] = useState("");
-  const [newSectionCapacity, setNewSectionCapacity] = useState<
-    number | undefined
-  >(undefined);
-  const { activeProject } = useProjects();
-  const [isEditMode, setIsEditMode] = useState(false);
-  const {
-    register,
-    handleSubmit: handleNewFormSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    // defaultValues: {
-    //     newSectionCapacity: 1000,
-    // },
-  });
-  const onSubmit = (data: FormValues) => {
-    addSections({
-      newSectionName: data.newSectionTitle,
-      capacity: data.newSectionCapacity,
+    const [newSectionTitle, setNewSectionTitle] = useState("");
+    const [newSectionCapacity, setNewSectionCapacity] = useState<
+        number | undefined
+    >(undefined);
+    const { activeProject } = useProjects();
+    const [isEditMode, setIsEditMode] = useState(false);
+    const {
+        register,
+        handleSubmit: handleNewFormSubmit,
+        reset,
+        formState: { errors },
+    } = useForm<FormValues>({
+        resolver: zodResolver(formSchema),
+        // defaultValues: {
+        //     newSectionCapacity: 1000,
+        // },
     });
-    reset(); // Reset form fields after submission
-  };
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 2xl:px-0">
-      <main className="flex flex-col py-12 min-h-screen bg-gray-100 gap-8">
-        <CounterHeader
-          isEditMode={isEditMode}
-          setIsEditMode={setIsEditMode}
-          activeProject={activeProject}
-          sections={sections}
-          resetCounts={resetCounts}
-          handleNewFormSubmit={handleNewFormSubmit}
-          onSubmit={onSubmit}
-          register={register}
-          errors={errors}
-        />
-        {isSectionsLoading ? (
-          <div className="flex justify-center items-center min-h-[300px]">
-            <Loader />
-            <p className="ml-4 text-lg font-medium">Loading sections...</p>
-          </div>
-        ) : sections.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-6">
-            {sections.map((section, sectionIndex) => {
-              // return <></>;
-              return (
-                <CounterSection
-                  {...section}
-                  key={section.id + sectionIndex + Math.random()}
-                  increment={increment}
-                  decrement={decrement}
-                  deleteSection={() => deleteSections(section.id)}
-                  renameSection={renameSection}
-                  isEditMode={isEditMode}
-                  capacity={section.capacity}
-                  handleAddCapacity={(capacityProp?: number) => {
-                    const sectionArray = sections.find(
-                      (sectionArrayEl) => sectionArrayEl.id === section.id,
-                    );
-                    if (sectionArray && capacityProp) {
-                      const updatedSection = {
-                        ...sectionArray,
-                        capacity: capacityProp,
-                      };
-                      updateSection([updatedSection]);
-                    }
-                  }}
+    const onSubmit = (data: FormValues) => {
+        addSections({
+            newSectionName: data.newSectionTitle,
+            capacity: data.newSectionCapacity,
+        });
+        reset(); // Reset form fields after submission
+    };
+    return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 2xl:px-0">
+            <main className="flex flex-col py-12 min-h-screen bg-gray-100 gap-8">
+                <CounterHeader
+                    isEditMode={isEditMode}
+                    setIsEditMode={setIsEditMode}
+                    activeProject={activeProject}
+                    sections={sections}
+                    resetCounts={resetCounts}
+                    handleNewFormSubmit={handleNewFormSubmit}
+                    onSubmit={onSubmit}
+                    register={register}
+                    errors={errors}
                 />
-              );
-            })}
-          </div>
-        ) : (
-          <EmptySection
-            newSectionTitle={newSectionTitle}
-            setNewSectionTitle={setNewSectionTitle}
-            newSectionCapacity={newSectionCapacity}
-            setNewSectionCapacity={setNewSectionCapacity}
-            onAddSection={() => {
-              addSections({
-                newSectionName: newSectionTitle,
-                capacity: newSectionCapacity ?? undefined,
-              });
-              setNewSectionTitle("");
-            }}
-          />
-        )}
-      </main>
-    </div>
-  );
+                {isSectionsLoading ? (
+                    <div className="flex justify-center items-center min-h-[300px]">
+                        <Loader />
+                        <p className="ml-4 text-lg font-medium">
+                            Loading sections...
+                        </p>
+                    </div>
+                ) : sections.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-6">
+                        {sections.map((section, sectionIndex) => {
+                            // return <></>;
+                            return (
+                                <CounterSection
+                                    {...section}
+                                    key={
+                                        section.id +
+                                        sectionIndex +
+                                        Math.random()
+                                    }
+                                    increment={increment}
+                                    decrement={decrement}
+                                    deleteSection={() =>
+                                        deleteSections(section.id)
+                                    }
+                                    renameSection={renameSection}
+                                    isEditMode={isEditMode}
+                                    capacity={section.capacity}
+                                    handleAddCapacity={(
+                                        capacityProp?: number
+                                    ) => {
+                                        const sectionArray = sections.find(
+                                            (sectionArrayEl) =>
+                                                sectionArrayEl.id === section.id
+                                        );
+                                        if (sectionArray && capacityProp) {
+                                            const updatedSection = {
+                                                ...sectionArray,
+                                                capacity: capacityProp,
+                                            };
+                                            updateSection([updatedSection]);
+                                        }
+                                    }}
+                                />
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <EmptySection
+                        newSectionTitle={newSectionTitle}
+                        setNewSectionTitle={setNewSectionTitle}
+                        newSectionCapacity={newSectionCapacity}
+                        setNewSectionCapacity={setNewSectionCapacity}
+                        onAddSection={() => {
+                            addSections({
+                                newSectionName: newSectionTitle,
+                                capacity: newSectionCapacity ?? undefined,
+                            });
+                            setNewSectionTitle("");
+                        }}
+                    />
+                )}
+            </main>
+        </div>
+    );
 };
 
 export default CountersPanel;
