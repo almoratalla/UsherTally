@@ -9,12 +9,12 @@ import { PropsWithChildren } from "react";
 const queryClient = new QueryClient();
 
 function Providers({ children }: PropsWithChildren) {
-    return (
-        <QueryClientProvider client={queryClient}>
-            <FirebaseAuthProvider>{children}</FirebaseAuthProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <FirebaseAuthProvider>{children}</FirebaseAuthProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
 }
 
 export default Providers;
