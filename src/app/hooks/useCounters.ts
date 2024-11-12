@@ -137,6 +137,7 @@ export const useCounters = () => {
           projectName: doc.data().projectName,
           lastModified: doc.data().lastModified,
           capacity: doc.data().capacity,
+          layout: doc.data().layout,
         }))
         .sort((a, b) => a.id - b.id);
       setSections(sectionsData);
@@ -274,9 +275,13 @@ export const useCounters = () => {
     mutationFn: async ({
       newSectionName,
       capacity,
+      layout,
+      count
     }: {
       newSectionName?: string;
       capacity?: number;
+      layout?: number[][];
+      count?: number;
     }) => {
       // Create a new section with an incremental ID
       const newId =
@@ -284,10 +289,11 @@ export const useCounters = () => {
       const newSection = {
         id: newId,
         name: `${!!newSectionName ? newSectionName : "Section " + newId}`,
-        count: 0,
+        count: count ?? 0,
         projectName: activeProject?.projectName || "",
         lastModified: new Date(),
         capacity: capacity,
+        layout: layout,
       };
 
       // Accumulate the new section into the ref array
@@ -318,6 +324,7 @@ export const useCounters = () => {
             projectName: section.projectName,
             lastModifed: section.lastModified,
             capacity: capacity,
+            layout: layout,
           }));
 
           // API call to add the accumulated sections
@@ -384,6 +391,7 @@ export const useCounters = () => {
           projectName: doc.data().projectName,
           lastModified: doc.data().lastModified,
           capacity: doc.data().capacity,
+          layout: doc.data().layout,
         }))
         .sort((a, b) => a.id - b.id);
       setSections(updatedSections);
@@ -440,6 +448,7 @@ export const useCounters = () => {
         name: string;
         lastModified: Date;
         capacity?: number;
+        layout?: number[][];
       }) => {
         setSections((prevSections) => {
           const sectionMap = new Map(prevSections.map((s) => [s.id, s]));
@@ -452,6 +461,7 @@ export const useCounters = () => {
             projectName: activeProject?.projectName || "",
             lastModified: data.lastModified,
             capacity: data.capacity,
+            layout: data.layout,
           });
 
           // Return the sections as an array while retaining order
@@ -496,7 +506,7 @@ export const useCounters = () => {
   );
 
   const activeProjectSections = useMemo(
-    () =>
+    () => 
       sections.filter(
         (section) => section.projectName === activeProject?.projectName,
       ),

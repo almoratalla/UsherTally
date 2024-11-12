@@ -7,6 +7,7 @@ export interface Section {
   projectName: string;
   lastModified: Date;
   capacity?: number;
+  layout?: number[][];
 }
 
 type SectionCountRecord = Record<string, number>;

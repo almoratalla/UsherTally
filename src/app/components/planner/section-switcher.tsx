@@ -48,6 +48,7 @@ const SectionSwitcher = () => {
                   key={section.id + section.name}
                   onSelect={() => {
                     setSelectedSection(section);
+                    
                     setOpen(false);
                   }}
                 >
