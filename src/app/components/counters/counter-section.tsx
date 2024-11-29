@@ -20,6 +20,7 @@ import {
   Plus,
   Trash2,
   UsersRound,
+  X,
 } from "lucide-react";
 import React, {
   FC,
@@ -56,6 +57,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { getProgressBarColor } from "@/utils/functions";
+import CounterRaw from "./counter-raw";
 
 const CounterSection: FC<
   PropsWithChildren &
@@ -68,6 +70,8 @@ const CounterSection: FC<
       capacity?: number;
       handleAddCapacity: (capacity?: number) => void;
       setCountAndCap: (id: number, count: number, capacity?: number) => void;
+      isExpanded: number | null;
+      setIsExpanded: (value: number | null) => void;
     }
 > = ({
   id,
@@ -81,6 +85,8 @@ const CounterSection: FC<
   capacity,
   handleAddCapacity,
   setCountAndCap,
+  isExpanded,
+  setIsExpanded,
 }) => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editingTitle, setEditingTitle] = useState(name);
@@ -149,6 +155,28 @@ const CounterSection: FC<
             {editingTitle}
           </CardTitle>
         )}
+        {!isEditMode ? (
+          !isExpanded ? (
+            <Button
+              variant="outline"
+              size="icon"
+              className=""
+              onClick={() => setIsExpanded(id)}
+            >
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="icon"
+              className=""
+              onClick={() => setIsExpanded(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )
+        ) : null}
+
         {isEditMode ? (
           <div className="flex flex-row justify-end self-start">
             {/* Hidden on smaller screens, shown as a combobox on 2xl */}

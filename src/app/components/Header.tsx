@@ -112,7 +112,7 @@ export const Header = () => {
       <div className="max-w-7xl mx-auto py-6 flex justify-between items-center">
         <div className="text-2xl font-bold text-gray-900 flex flex-row gap-4 sm:gap-8 items-center">
           <Link href="/" className="cursor-pointer flex flex-row gap-2">
-            <Image src={"./tallya.svg"} alt={""} width={20} height={20} />
+            <Image src={"/tallya.svg"} alt={""} width={20} height={20} />
             <h1 className="text-xl font-bold uppercase tracking-wider text-brand-primary hidden sm:block">
               Tallya
             </h1>

@@ -18,6 +18,9 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { CounterHeader } from "../counters/counter-header";
 import { adjustLayoutToSeatCount, updateLayout } from "@/utils/functions";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import CounterRaw from "../counters/counter-raw";
+import { DialogTitle } from "@radix-ui/react-dialog";
 interface FormValues {
   newSectionTitle: string;
   newSectionCapacity: number | undefined;
@@ -119,6 +122,7 @@ const CountersPanel = () => {
     });
     reset(); // Reset form fields after submission
   };
+  const [isExpanded, setIsExpanded] = useState<number | null>(null);
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 2xl:px-0">
       <main className="flex flex-col py-12 min-h-screen bg-gray-100 gap-8">
@@ -143,29 +147,75 @@ const CountersPanel = () => {
             {sections.map((section, sectionIndex) => {
               // return <></>;
               return (
-                <CounterSection
-                  {...section}
-                  key={section.id + sectionIndex + Math.random()}
-                  increment={increment}
-                  decrement={decrement}
-                  deleteSection={() => deleteSections(section.id)}
-                  renameSection={renameSection}
-                  isEditMode={isEditMode}
-                  capacity={section.capacity}
-                  handleAddCapacity={(capacityProp?: number) => {
-                    const sectionArray = sections.find(
-                      (sectionArrayEl) => sectionArrayEl.id === section.id,
-                    );
-                    if (sectionArray && capacityProp) {
-                      const updatedSection = {
-                        ...sectionArray,
-                        capacity: capacityProp,
-                      };
-                      updateSection([updatedSection]);
+                <div key={section.id}>
+                  <Dialog
+                    open={
+                      typeof isExpanded === "number" &&
+                      isExpanded === section.id
                     }
-                  }}
-                  setCountAndCap={setCountAndCap}
-                />
+                    onOpenChange={() => setIsExpanded(null)}
+                  >
+                    <DialogContent
+                      className="max-w-full h-full m-0 p-0"
+                      onInteractOutside={(e) => e.preventDefault()}
+                    >
+                      <div className="w-full max-w-7xl mx-auto px-4 py-12 sm:px-6 2xl:px-0">
+                        <DialogTitle className="text-md text-slate-600 py-4 my-4 border-slate-300 border-b-2">
+                          Section: {section.name}
+                        </DialogTitle>
+
+                        <CounterRaw
+                          {...section}
+                          increment={increment}
+                          decrement={decrement}
+                          isEditMode={isEditMode}
+                          renameSection={renameSection}
+                          deleteSection={() => deleteSections(section.id)}
+                          capacity={section.capacity}
+                          key={section.id + sectionIndex + Math.random()}
+                          handleAddCapacity={(capacityProp?: number) => {
+                            const sectionArray = sections.find(
+                              (sectionArrayEl) =>
+                                sectionArrayEl.id === section.id,
+                            );
+                            if (sectionArray && capacityProp) {
+                              const updatedSection = {
+                                ...sectionArray,
+                                capacity: capacityProp,
+                              };
+                              updateSection([updatedSection]);
+                            }
+                          }}
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <CounterSection
+                    {...section}
+                    key={section.id + sectionIndex + Math.random()}
+                    increment={increment}
+                    decrement={decrement}
+                    deleteSection={() => deleteSections(section.id)}
+                    renameSection={renameSection}
+                    isEditMode={isEditMode}
+                    capacity={section.capacity}
+                    handleAddCapacity={(capacityProp?: number) => {
+                      const sectionArray = sections.find(
+                        (sectionArrayEl) => sectionArrayEl.id === section.id,
+                      );
+                      if (sectionArray && capacityProp) {
+                        const updatedSection = {
+                          ...sectionArray,
+                          capacity: capacityProp,
+                        };
+                        updateSection([updatedSection]);
+                      }
+                    }}
+                    setCountAndCap={setCountAndCap}
+                    isExpanded={isExpanded}
+                    setIsExpanded={setIsExpanded}
+                  />
+                </div>
               );
             })}
           </div>
