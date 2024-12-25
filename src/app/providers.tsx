@@ -14,16 +14,16 @@ import { ActiveUserProvider } from "./hooks/useActiveUser";
 const queryClient = new QueryClient();
 
 function Providers({ children }: PropsWithChildren) {
-    return (
-        <QueryClientProvider client={queryClient}>
-            <FirebaseAuthProvider>
-                <ProjectsProvider>
-                    <ActiveUserProvider>{children}</ActiveUserProvider>
-                </ProjectsProvider>
-            </FirebaseAuthProvider>
-            <ReactQueryDevtools initialIsOpen={true} />
-        </QueryClientProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <FirebaseAuthProvider>
+        <ProjectsProvider>
+          <ActiveUserProvider>{children}</ActiveUserProvider>
+        </ProjectsProvider>
+      </FirebaseAuthProvider>
+      <ReactQueryDevtools initialIsOpen={true} />
+    </QueryClientProvider>
+  );
 }
 
 export default Providers;
