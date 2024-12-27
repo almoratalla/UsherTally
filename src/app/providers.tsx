@@ -15,25 +15,25 @@ import { ThemeProvider } from "./components/theme-provider";
 const queryClient = new QueryClient();
 
 function Providers({ children }: PropsWithChildren) {
-    return (
-        <QueryClientProvider client={queryClient}>
-            <FirebaseAuthProvider>
-                <ProjectsProvider>
-                    <ActiveUserProvider>
-                        <ThemeProvider
-                            attribute="class"
-                            defaultTheme="system"
-                            enableSystem
-                            disableTransitionOnChange
-                        >
-                            {children}
-                        </ThemeProvider>
-                    </ActiveUserProvider>
-                </ProjectsProvider>
-            </FirebaseAuthProvider>
-            <ReactQueryDevtools initialIsOpen={true} />
-        </QueryClientProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <FirebaseAuthProvider>
+        <ProjectsProvider>
+          <ActiveUserProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </ActiveUserProvider>
+        </ProjectsProvider>
+      </FirebaseAuthProvider>
+      <ReactQueryDevtools initialIsOpen={true} />
+    </QueryClientProvider>
+  );
 }
 
 export default Providers;
