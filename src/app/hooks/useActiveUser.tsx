@@ -1,53 +1,127 @@
 import { createContext, useContext, useState } from "react";
-import { iActiveUser } from "../lib/definitions";
+import { FirestorePreferences, iActiveUser } from "../lib/definitions";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/utils/firebase";
+import { useMutation } from "@tanstack/react-query";
+import { ProfileFormValues } from "../components/settings/ProfileSettingsForm";
+import { AccountFormValues } from "../components/settings/AccountSettingsForm";
 
 interface iActiveUserContext {
-  activeUser: iActiveUser | null;
-  setActiveUser: (state: iActiveUser) => void;
+    activeUser: Partial<iActiveUser> | null;
+    setActiveUser: (state: Partial<iActiveUser>) => void;
+    activePreferences: Partial<FirestorePreferences> | null | undefined;
+    setActivePreferences: (
+        state: Partial<FirestorePreferences> | null | undefined
+    ) => void;
 }
 
 const ActiveUserContext = createContext<iActiveUserContext | null>({
-  activeUser: null,
-  setActiveUser: () => {},
+    activeUser: null,
+    setActiveUser: () => {},
+    activePreferences: null,
+    setActivePreferences: () => {},
 });
 
 export const ActiveUserProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
+    children,
 }) => {
-  const [activeUser, setActiveUser] = useState<iActiveUser | null>(null);
+    const [activeUser, setActiveUser] = useState<Partial<iActiveUser> | null>(
+        null
+    );
+    const [activePreferences, setActivePreferences] = useState<
+        Partial<FirestorePreferences> | null | undefined
+    >(null);
 
-  return (
-    <ActiveUserContext.Provider value={{ activeUser, setActiveUser }}>
-      {children}
-    </ActiveUserContext.Provider>
-  );
+    return (
+        <ActiveUserContext.Provider
+            value={{
+                activeUser,
+                setActiveUser,
+                activePreferences,
+                setActivePreferences,
+            }}
+        >
+            {children}
+        </ActiveUserContext.Provider>
+    );
 };
 
 export const useActiveUser = () => {
-  const activeUserContext = useContext(ActiveUserContext);
-  const checkAuth = async (uuid: string) => {
-    const sectionsRef = collection(db, "users");
-    const snapshot = await getDocs(sectionsRef);
-    const recordedUser = snapshot.docs
-      .map((doc) => doc.data())
-      .find((d) => d.uuid === uuid);
-    if (!recordedUser) {
-      const response = await fetch("/api/check-auth", {
-        method: "GET",
-        headers: {
-          "x-tally-id": uuid,
+    const activeUserContext = useContext(ActiveUserContext);
+    const checkAuth = async (
+        uuid: string
+    ): Promise<{
+        user: Partial<iActiveUser>;
+        preferences?: Partial<FirestorePreferences>;
+    }> => {
+        const usersRef = collection(db, "users");
+        const preferencesRef = collection(db, "preferences");
+        const usersSnapshot = await getDocs(usersRef);
+        const preferencesSnapshot = await getDocs(preferencesRef);
+        const recordedUser = usersSnapshot.docs
+            .map((doc) => doc.data())
+            .find((d) => d.uuid === uuid);
+        const recordedPreferences = preferencesSnapshot.docs
+            .map((doc) => doc.data())
+            .find((d) => d.uuid === uuid);
+        if (!recordedUser) {
+            const response = await fetch("/api/check-auth", {
+                method: "GET",
+                headers: {
+                    "x-tally-id": uuid,
+                },
+            });
+            const user = await response.json();
+            return {
+                user: user as iActiveUser,
+                preferences: recordedPreferences as FirestorePreferences,
+            };
+        }
+        return {
+            user: {
+                ...recordedUser,
+            } as iActiveUser,
+            preferences: recordedPreferences as FirestorePreferences,
+        };
+    };
+
+    const {
+        mutateAsync: mutateUpdateSettings,
+        isPending: mutateUpdateSettingsPending,
+    } = useMutation({
+        mutationKey: ["update-settings"],
+        mutationFn: async (updateSettingsData: {
+            uuid: string;
+            data?: Partial<iActiveUser>;
+            preferences?: Partial<FirestorePreferences>;
+        }) => {
+            try {
+                await fetch("/api/update-settings", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        id: updateSettingsData?.uuid,
+                        payload: updateSettingsData.data,
+                        preferences: updateSettingsData.preferences,
+                    }),
+                });
+                return { result: "success", changed: true };
+            } catch (error) {
+                return { result: "fail", changed: false };
+            }
         },
-      });
-      const user = await response.json();
-      return user as iActiveUser;
-    }
-    return recordedUser as iActiveUser;
-  };
-  return {
-    activeUser: activeUserContext?.activeUser,
-    setActiveUser: activeUserContext?.setActiveUser || (() => {}),
-    checkAuth,
-  };
+    });
+
+    return {
+        activeUser: activeUserContext?.activeUser,
+        setActiveUser: activeUserContext?.setActiveUser || (() => {}),
+        activePreferences: activeUserContext?.activePreferences,
+        setActivePreferences:
+            activeUserContext?.setActivePreferences || (() => {}),
+        checkAuth,
+        updateSettings: mutateUpdateSettings,
+        updateSettingsPending: mutateUpdateSettingsPending,
+    };
 };

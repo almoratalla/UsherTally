@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import Providers from "../providers";
 import ProtectedLayout from "../components/ProtectedLayout";
 import Head from "next/head";
+import { Toaster } from "@/components/ui/toaster";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
@@ -60,6 +61,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={montserrat.className}>
         <Providers>
+          <Toaster />
           <ProtectedLayout>{children}</ProtectedLayout>
         </Providers>
       </body>
