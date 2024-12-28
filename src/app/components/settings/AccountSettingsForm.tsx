@@ -28,15 +28,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { convertFirebaseTimestampToDate } from "@/utils/functions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { differenceInYears, format } from "date-fns";
-import { Firestore } from "firebase-admin/firestore";
-import { Timestamp } from "firebase/firestore";
 import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { date, z } from "zod";
+import { z } from "zod";
 
 const languages = [
   { label: "English", value: "en" },
