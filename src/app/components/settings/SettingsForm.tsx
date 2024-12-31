@@ -30,7 +30,7 @@ const SettingsForm = () => {
     const { user, preferences } = await checkAuth(authStateUser?.uid ?? "");
     setActiveUser(user);
     setActivePreferences(preferences);
-  }, [authStateUser?.uid, checkAuth, setActiveUser]);
+  }, [authStateUser?.uid, checkAuth, setActivePreferences, setActiveUser]);
 
   useEffect(() => {
     if (!activeUser) {

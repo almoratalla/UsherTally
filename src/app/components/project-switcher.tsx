@@ -65,6 +65,7 @@ export default function ProjectSwitcher({ className }: TeamSwitcherProps) {
   const handleCreateProject = async () => {
     if (projectName && projectType) {
       await createProject({
+        projectId: "",
         owner: user?.email || "",
         projectName,
         type: projectType,
@@ -188,8 +189,8 @@ export default function ProjectSwitcher({ className }: TeamSwitcherProps) {
           </Command>
         </PopoverContent>
       </Popover>
-      <DialogContent className="w-[100px]">
-        <DialogHeader className="w-[100px]">
+      <DialogContent className="w-full">
+        <DialogHeader className="w-full">
           <DialogTitle>Create Project</DialogTitle>
           <DialogDescription>
             Add a new project to manage your work.

@@ -1,14 +1,28 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { collection, getDocs, addDoc, query } from "firebase/firestore";
-import { db } from "@/utils/firebase";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { collection, getDocs, addDoc, query, doc } from "firebase/firestore";
+import { auth, db } from "@/utils/firebase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchRolesAndPerms,
+  iFirestoreRolesAndPerms,
+} from "./useRolesAndPermissions";
+import { useActiveUser } from "./useActiveUser";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 // Define your project type
-interface Project {
+export interface Project {
+  projectId: string;
   owner: string;
   projectName: string;
   type: "private" | "public";
-  members: string[];
+  members: { uid: string; name: string; email: string; role: string }[];
 }
 
 const fetchProjects = async (): Promise<Project[]> => {
@@ -48,12 +62,46 @@ export const useProjects = () => {
       return fetchProjects();
     },
   });
+  const { data: rolesAndPerms = [], isLoading: isRolesLoading } = useQuery<
+    iFirestoreRolesAndPerms[]
+  >({
+    queryKey: ["rolesAndPerms"],
+    queryFn: fetchRolesAndPerms,
+  });
   const projectsContext = useContext(ProjectsContext);
 
+  const { activeUser, checkAuth, setActiveUser, setActivePreferences } =
+    useActiveUser();
+  const [authStateUser] = useAuthState(auth);
+
+  const checkAuthUser = useCallback(async () => {
+    const { user, preferences } = await checkAuth(authStateUser?.uid ?? "");
+    setActiveUser(user);
+    setActivePreferences(preferences);
+  }, [authStateUser?.uid, checkAuth, setActivePreferences, setActiveUser]);
+
+  useEffect(() => {
+    if (!activeUser) {
+      checkAuthUser();
+    }
+  }, [checkAuthUser, activeUser]);
+
   const groupedProjects = useMemo(() => {
+    const userPermissions = rolesAndPerms.find(
+      (perm) => perm.uid === activeUser?.uuid,
+    );
+
     return projects.reduce<
       { type: "public" | "private"; projects: Project[] }[]
     >((acc, project) => {
+      const hasAccess =
+        project.type === "public" ||
+        userPermissions?.projectMapping.some(
+          (mapping) => mapping.projectId === project.projectId,
+        ) ||
+        project.owner === activeUser?.email;
+      if (!hasAccess) return acc;
+
       const found = acc.find((item) => item.type === project.type);
       if (found) {
         found.projects.push(project);
@@ -62,7 +110,7 @@ export const useProjects = () => {
       }
       return acc;
     }, []);
-  }, [projects]);
+  }, [activeUser?.email, activeUser?.uuid, projects, rolesAndPerms]);
 
   useEffect(() => {
     if (!projectsContext?.activeProject && groupedProjects.length > 0) {
@@ -77,7 +125,9 @@ export const useProjects = () => {
 
   // Create project mutation
   const createProject = async (newProject: Project) => {
-    await addDoc(collection(db, "projects"), newProject);
+    const ref = doc(collection(db, "projects"));
+
+    await addDoc(ref.parent, { ...newProject, projectId: ref.id });
     queryClient.invalidateQueries({ queryKey: ["projects"] }); // Invalidate projects to refresh data
   };
 

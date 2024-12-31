@@ -1,10 +1,12 @@
 import { createContext, useContext, useState } from "react";
-import { FirestorePreferences, iActiveUser } from "../lib/definitions";
+import {
+  FirestorePreferences,
+  FirestoreUser,
+  iActiveUser,
+} from "../lib/definitions";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/utils/firebase";
-import { useMutation } from "@tanstack/react-query";
-import { ProfileFormValues } from "../components/settings/ProfileSettingsForm";
-import { AccountFormValues } from "../components/settings/AccountSettingsForm";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface iActiveUserContext {
   activeUser: Partial<iActiveUser> | null;
@@ -114,7 +116,17 @@ export const useActiveUser = () => {
     },
   });
 
+  const { data: allUsers } = useQuery<FirestoreUser[]>({
+    queryKey: ["allUsers"],
+    queryFn: async () => {
+      const usersRef = collection(db, "users");
+      const usersSnapshot = await getDocs(usersRef);
+      return usersSnapshot.docs.map((doc) => doc.data()) as FirestoreUser[];
+    },
+  });
+
   return {
+    getAllUsers: allUsers,
     activeUser: activeUserContext?.activeUser,
     setActiveUser: activeUserContext?.setActiveUser || (() => {}),
     activePreferences: activeUserContext?.activePreferences,

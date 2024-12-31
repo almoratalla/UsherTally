@@ -1,7 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
-import { Save, Trash2, UserPlus, ChevronDown, ChevronUp } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Save,
+  Trash2,
+  UserPlus,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +62,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Project, useProjects } from "@/app/hooks/useProjects";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { set } from "date-fns";
+import ProjectSettingsUserSelect from "./ProjectSettingsUserSelect";
+import AddNewProjectUserForm, {
+  getProjectMembersAndAvailableUsers,
+} from "./ProjectSettingsForm/AddNewProjectUserForm";
+import { useActiveUser } from "@/app/hooks/useActiveUser";
+import { FirestoreUser } from "@/app/lib/definitions";
 
 type Role = "Admin" | "Moderator" | "Member";
 type Permission = "None" | "Viewer" | "Editor";
@@ -87,17 +117,12 @@ interface AddUserFormData {
   email: string;
   role: Role;
 }
-const projects = [
-  { id: "this", name: "This project" },
-  { id: "all", name: "All projects" },
-];
 
 const ProjectSettings = ({
   projectName,
   initialUsers = [],
   features,
 }: ProjectSettingsProps) => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
   const [tempPermissions, setTempPermissions] = useState<
@@ -108,112 +133,133 @@ const ProjectSettings = ({
     id: string;
     newRole: Role;
   } | null>(null);
-  const [currentProjectId, setCurrentProjectId] = useState("this");
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<AddUserFormData>();
+  const { projectsByType } = useProjects();
+  const projects = useMemo(
+    () => projectsByType.find((p) => p.type === "private")?.projects,
+    [projectsByType],
+  );
 
-  const addUser = (data: AddUserFormData) => {
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      featurePermissions: features.map((feature) => ({
-        featureId: feature.id,
-        permission: "None",
-      })),
-    };
-    setUsers([...users, newUser]);
+  const { getAllUsers } = useActiveUser();
+
+  const members = useMemo(
+    () =>
+      getAllUsers
+        ? getProjectMembersAndAvailableUsers(
+            getAllUsers,
+            projectsByType,
+            currentProject?.projectName ?? "",
+          ).members
+        : [],
+    [currentProject?.projectName, getAllUsers, projectsByType],
+  );
+  const [users, setUsers] =
+    useState<(FirestoreUser & { role: string })[]>(members);
+
+  useEffect(() => {
+    setUsers(members);
+  }, [members]);
+
+  // const removeUser = (id: string) => {
+  //     const updatedUsers = users.filter((user) => user.id !== id);
+  //     setUsers(updatedUsers);
+  //     setExpandedUsers(expandedUsers.filter((userId) => userId !== id));
+  //     toast({
+  //         title: "User removed",
+  //         description: "The user has been removed from the project.",
+  //     });
+  // };
+
+  // const updateUserRole = (id: string, newRole: Role) => {
+  //     setUserToChangeRole({ id, newRole });
+  //     setIsRoleChangeDialogOpen(true);
+  // };
+
+  // const confirmRoleChange = () => {
+  //     if (userToChangeRole) {
+  //         const updatedUsers = users.map((user) =>
+  //             user.id === userToChangeRole.id
+  //                 ? { ...user, role: userToChangeRole.newRole }
+  //                 : user
+  //         );
+  //         setUsers(updatedUsers);
+  //         setIsRoleChangeDialogOpen(false);
+  //         setUserToChangeRole(null);
+  //         toast({
+  //             title: "Role updated",
+  //             description: `User role has been updated to ${userToChangeRole.newRole}.`,
+  //         });
+  //     }
+  // };
+
+  // const updateTempPermission = (
+  //     userId: string,
+  //     featureId: string,
+  //     permission: Permission
+  // ) => {
+  //     setTempPermissions((prev) => ({
+  //         ...prev,
+  //         [userId]: (prev[userId] || []).map((fp) =>
+  //             fp.featureId === featureId ? { ...fp, permission } : fp
+  //         ),
+  //     }));
+  // };
+
+  // const submitPermissionChanges = (userId: string) => {
+  //     const updatedUsers = users.map((user) => {
+  //         if (user.id === userId && tempPermissions[userId]) {
+  //             return { ...user, featurePermissions: tempPermissions[userId] };
+  //         }
+  //         return user;
+  //     });
+  //     setUsers(updatedUsers);
+  //     setTempPermissions((prev) => ({ ...prev, [userId]: [] }));
+  //     toast({
+  //         title: "Permissions updated",
+  //         description: "User's feature permissions have been updated.",
+  //     });
+  // };
+
+  const addUserInForm = (user: FirestoreUser, role: string) => {
+    setUsers((prev) => [...prev, { ...user, role }]);
     setIsAddUserDialogOpen(false);
-    reset();
-    toast({
-      title: "User added",
-      description: `${data.name} has been added to the project.`,
-    });
   };
 
-  const removeUser = (id: string) => {
-    const updatedUsers = users.filter((user) => user.id !== id);
-    setUsers(updatedUsers);
-    setExpandedUsers(expandedUsers.filter((userId) => userId !== id));
-    toast({
-      title: "User removed",
-      description: "The user has been removed from the project.",
-    });
-  };
-
-  const updateUserRole = (id: string, newRole: Role) => {
-    setUserToChangeRole({ id, newRole });
-    setIsRoleChangeDialogOpen(true);
-  };
-
-  const confirmRoleChange = () => {
-    if (userToChangeRole) {
-      const updatedUsers = users.map((user) =>
-        user.id === userToChangeRole.id
-          ? { ...user, role: userToChangeRole.newRole }
-          : user,
-      );
-      setUsers(updatedUsers);
-      setIsRoleChangeDialogOpen(false);
-      setUserToChangeRole(null);
-      toast({
-        title: "Role updated",
-        description: `User role has been updated to ${userToChangeRole.newRole}.`,
-      });
-    }
-  };
-
-  const updateTempPermission = (
-    userId: string,
-    featureId: string,
-    permission: Permission,
-  ) => {
-    setTempPermissions((prev) => ({
-      ...prev,
-      [userId]: (prev[userId] || []).map((fp) =>
-        fp.featureId === featureId ? { ...fp, permission } : fp,
-      ),
-    }));
-  };
-
-  const submitPermissionChanges = (userId: string) => {
-    const updatedUsers = users.map((user) => {
-      if (user.id === userId && tempPermissions[userId]) {
-        return { ...user, featurePermissions: tempPermissions[userId] };
-      }
-      return user;
-    });
-    setUsers(updatedUsers);
-    setTempPermissions((prev) => ({ ...prev, [userId]: [] }));
-    toast({
-      title: "Permissions updated",
-      description: "User's feature permissions have been updated.",
-    });
-  };
-
-  const toggleUserExpansion = (userId: string) => {
-    setExpandedUsers((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId],
-    );
-    if (!tempPermissions[userId]) {
-      setTempPermissions((prev) => ({
-        ...prev,
-        [userId]: users.find((u) => u.id === userId)?.featurePermissions || [],
-      }));
-    }
-  };
+  // const toggleUserExpansion = (userId: string) => {
+  //     setExpandedUsers((prev) =>
+  //         prev.includes(userId)
+  //             ? prev.filter((id) => id !== userId)
+  //             : [...prev, userId]
+  //     );
+  //     if (!tempPermissions[userId]) {
+  //         setTempPermissions((prev) => ({
+  //             ...prev,
+  //             [userId]:
+  //                 users.find((u) => u.id === userId)?.featurePermissions ||
+  //                 [],
+  //         }));
+  //     }
+  // };
 
   const handleProjectChange = (projectId: string) => {
-    setCurrentProjectId(projectId);
-    const newProject = projects.find((p) => p.id === projectId)!;
-    setUsers(initialUsers);
+    const newProject = projects?.find((p) => p.projectId === projectId);
+    setCurrentProject(newProject ?? null);
+
+    setUsers(
+      getAllUsers
+        ? getProjectMembersAndAvailableUsers(
+            getAllUsers,
+            projectsByType,
+            newProject?.projectName ?? "",
+          ).members
+        : [],
+    );
     setExpandedUsers([]);
     setTempPermissions({});
   };
@@ -233,17 +279,17 @@ const ProjectSettings = ({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-[200px] justify-between">
-                  {"aaa"}
+                  {currentProject?.projectName || "Select Project"}
                   <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
-                {projects.map((project) => (
+                {projects?.map((project) => (
                   <DropdownMenuItem
-                    key={project.id}
-                    onSelect={() => handleProjectChange(project.id)}
+                    key={project.projectId}
+                    onSelect={() => handleProjectChange(project.projectId)}
                   >
-                    {project.name}
+                    {project.projectName}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -257,72 +303,14 @@ const ProjectSettings = ({
                   <UserPlus className="mr-2 h-4 w-4" /> Add User
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="pointer-events-auto">
                 <DialogHeader>
                   <DialogTitle>Add New User</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit(addUser)} className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      {...register("name", {
-                        required: "Name is required",
-                      })}
-                      placeholder="Enter user's name"
-                    />
-                    {errors.name && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.name.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      {...register("email", {
-                        required: "Email is required",
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: "Invalid email address",
-                        },
-                      })}
-                      placeholder="Enter user's email"
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="role">Role</Label>
-                    <Select
-                      onValueChange={(value: Role) =>
-                        register("role").onChange({
-                          target: { value },
-                        })
-                      }
-                    >
-                      <SelectTrigger id="role">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Member">Member</SelectItem>
-                        <SelectItem value="Moderator">Moderator</SelectItem>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.role && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.role.message}
-                      </p>
-                    )}
-                  </div>
-                  <Button type="submit">Add User</Button>
-                </form>
+                <AddNewProjectUserForm
+                  currentProject={currentProject}
+                  addUserInForm={addUserInForm}
+                />
               </DialogContent>
             </Dialog>
           </div>
@@ -337,127 +325,170 @@ const ProjectSettings = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.length > 0 ? (
-                users.map((user) => (
-                  <React.Fragment key={user.id}>
-                    <TableRow>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleUserExpansion(user.id)}
-                        >
-                          {expandedUsers.includes(user.id) ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </TableCell>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Select
-                          value={user.role}
-                          onValueChange={(value: Role) =>
-                            updateUserRole(user.id, value)
-                          }
-                        >
-                          <SelectTrigger className="w-[130px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Member">Member</SelectItem>
-                            <SelectItem value="Moderator">Moderator</SelectItem>
-                            <SelectItem value="Admin">Admin</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeUser(user.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {expandedUsers.includes(user.id) && (
+              {users && users?.length > 0 ? (
+                users
+                  .filter((f) => f.role !== "Owner")
+                  .map((user) => (
+                    <React.Fragment key={user.uuid}>
                       <TableRow>
-                        <TableCell colSpan={5}>
-                          <Card>
-                            <CardHeader>
-                              <CardTitle>
-                                Feature Permissions for {user.name}
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <ScrollArea className="h-[300px] w-full">
-                                <div className="space-y-4">
-                                  {features.map((feature) => {
-                                    const userPermission =
-                                      (
-                                        tempPermissions[user.id] ||
-                                        user.featurePermissions
-                                      ).find(
-                                        (fp) => fp.featureId === feature.id,
-                                      )?.permission || "None";
-                                    return (
-                                      <div
-                                        key={feature.id}
-                                        className="flex items-center justify-between"
-                                      >
-                                        <span className="font-medium">
-                                          {feature.name}
-                                        </span>
-                                        <Select
-                                          value={userPermission}
-                                          onValueChange={(value: Permission) =>
-                                            updateTempPermission(
-                                              user.id,
-                                              feature.id,
-                                              value,
-                                            )
-                                          }
-                                        >
-                                          <SelectTrigger className="w-[100px]">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="None">
-                                              None
-                                            </SelectItem>
-                                            <SelectItem value="Viewer">
-                                              Viewer
-                                            </SelectItem>
-                                            <SelectItem value="Editor">
-                                              Editor
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </ScrollArea>
-                              <div className="mt-4 flex justify-end">
-                                <Button
-                                  onClick={() =>
-                                    submitPermissionChanges(user.id)
-                                  }
-                                >
-                                  <Save className="mr-2 h-4 w-4" />
-                                  Save Changes
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              // toggleUserExpansion(
+                              //     user.uuid
+                              // )
+                              console.log(user.uuid)
+                            }
+                          >
+                            {expandedUsers.includes(user.uuid) ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </TableCell>
+                        <TableCell>{user.username}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={user.role}
+                            onValueChange={(value: Role) =>
+                              // updateUserRole(
+                              //     user.email,
+                              //     value
+                              // )
+                              console.log(user.email)
+                            }
+                          >
+                            <SelectTrigger className="w-[130px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Member">Member</SelectItem>
+                              <SelectItem value="Moderator">
+                                Moderator
+                              </SelectItem>
+                              <SelectItem value="Admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              // removeUser(
+                              //     user.uuid
+                              // )
+                              console.log(user.uuid)
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
-                    )}
-                  </React.Fragment>
-                ))
+                      {/* {expandedUsers.includes(user.uuid) && (
+                                            <TableRow>
+                                                <TableCell colSpan={5}>
+                                                    <Card>
+                                                        <CardHeader>
+                                                            <CardTitle>
+                                                                Feature
+                                                                Permissions for{" "}
+                                                                {user.name}
+                                                            </CardTitle>
+                                                        </CardHeader>
+                                                        <CardContent>
+                                                            <ScrollArea className="h-[300px] w-full">
+                                                                <div className="space-y-4">
+                                                                    {features.map(
+                                                                        (
+                                                                            feature
+                                                                        ) => {
+                                                                            const userPermission =
+                                                                                (
+                                                                                    tempPermissions[
+                                                                                        user
+                                                                                            .uuid
+                                                                                    ] ||
+                                                                                    user.featurePermissions
+                                                                                ).find(
+                                                                                    (
+                                                                                        fp
+                                                                                    ) =>
+                                                                                        fp.featureId ===
+                                                                                        feature.id
+                                                                                )
+                                                                                    ?.permission ||
+                                                                                "None";
+                                                                            return (
+                                                                                <div
+                                                                                    key={
+                                                                                        feature.id
+                                                                                    }
+                                                                                    className="flex items-center justify-between"
+                                                                                >
+                                                                                    <span className="font-medium">
+                                                                                        {
+                                                                                            feature.name
+                                                                                        }
+                                                                                    </span>
+                                                                                    <Select
+                                                                                        value={
+                                                                                            userPermission
+                                                                                        }
+                                                                                        onValueChange={(
+                                                                                            value: Permission
+                                                                                        ) =>
+                                                                                            updateTempPermission(
+                                                                                                user.id,
+                                                                                                feature.id,
+                                                                                                value
+                                                                                            )
+                                                                                        }
+                                                                                    >
+                                                                                        <SelectTrigger className="w-[100px]">
+                                                                                            <SelectValue />
+                                                                                        </SelectTrigger>
+                                                                                        <SelectContent>
+                                                                                            <SelectItem value="None">
+                                                                                                None
+                                                                                            </SelectItem>
+                                                                                            <SelectItem value="Viewer">
+                                                                                                Viewer
+                                                                                            </SelectItem>
+                                                                                            <SelectItem value="Editor">
+                                                                                                Editor
+                                                                                            </SelectItem>
+                                                                                        </SelectContent>
+                                                                                    </Select>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                    )}
+                                                                </div>
+                                                            </ScrollArea>
+                                                            <div className="mt-4 flex justify-end">
+                                                                <Button
+                                                                    onClick={() =>
+                                                                        submitPermissionChanges(
+                                                                            user.id
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Save className="mr-2 h-4 w-4" />
+                                                                    Save Changes
+                                                                </Button>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                </TableCell>
+                                            </TableRow>
+                                        )} */}
+                    </React.Fragment>
+                  ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center">
@@ -478,7 +509,7 @@ const ProjectSettings = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Role Change</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to change this user's role to{" "}
+              Are you sure you want to change this user&apos;s role to{" "}
               {userToChangeRole?.newRole}? This action may affect their
               permissions and access to certain features.
             </AlertDialogDescription>
@@ -487,7 +518,7 @@ const ProjectSettings = ({
             <AlertDialogCancel onClick={() => setUserToChangeRole(null)}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRoleChange}>
+            <AlertDialogAction onClick={() => console.log("Confirm")}>
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
